@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 private val LightColorScheme = lightColorScheme()
 
 @Composable
-fun ResenasKotlinTheme(content: @Composable () -> Unit) {
+fun GestionNovelasFinal(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColorScheme,
         content = content
