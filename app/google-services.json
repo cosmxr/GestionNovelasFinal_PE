@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "25491207519",
+    "project_id": "gestionnovelasactualizado",
+    "storage_bucket": "gestionnovelasactualizado.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25491207519:android:6ff987745e3c44987e32ea",
+        "android_client_info": {
+          "package_name": "com.example.gestionnovelasfinal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyT3Rt27Kk7ytmhC7Dn_BwVF4rz9e7ZXQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
