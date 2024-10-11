@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "25491207519",
-    "project_id": "gestionnovelasactualizado",
-    "storage_bucket": "gestionnovelasactualizado.appspot.com"
+    "project_number": "160189899254",
+    "firebase_url": "https://pruebafirebase-b8bf5-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "pruebafirebase-b8bf5",
+    "storage_bucket": "pruebafirebase-b8bf5.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:25491207519:android:6ff987745e3c44987e32ea",
+        "mobilesdk_app_id": "1:160189899254:android:6663e6f2fc25810e1fa7d7",
         "android_client_info": {
           "package_name": "com.example.gestionnovelasfinal"
         }
@@ -15,7 +16,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAyT3Rt27Kk7ytmhC7Dn_BwVF4rz9e7ZXQ"
+          "current_key": "AIzaSyAjoCrtfTkGDzYPzZpzgBcSiWJ3wRQnWok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:160189899254:android:4fd7ce0722f153461fa7d7",
+        "android_client_info": {
+          "package_name": "com.example.pruebafirebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjoCrtfTkGDzYPzZpzgBcSiWJ3wRQnWok"
         }
       ],
       "services": {

@@ -2,15 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
+
 }
 
 android {
 
-    namespace = "com.example.gestionresenaskotlin"
+    namespace = "com.example.gestionnovelasfinal"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.gestionresenaskotlin"
+        applicationId = "com.example.gestionnovelasfinal"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -63,6 +64,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
     implementation("androidx.navigation:navigation-compose:2.7.2")
+    implementation(libs.firebase.database.ktx)
 
     // Testing
     testImplementation("junit:junit:4.13.2")
@@ -79,4 +81,9 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation ("com.google.firebase:firebase-firestore")
+    implementation ("com.google.firebase:firebase-firestore-ktx")
+
+        implementation ("com.google.firebase:firebase-firestore-ktx:24.7.1")
+
+
 }
