@@ -32,7 +32,7 @@ data class Resenas(
         }
     }
 }
-
+//para que pueda leer Strings de forma que lo acepten ya que parceable no deja
 private fun String.readString(): String? {
     TODO("Not yet implemented")
 }
