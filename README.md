@@ -68,4 +68,4 @@ Función auxiliar para marcar o desmarcar una novela como favorita.
   - `novelas`: Lista actual de novelas.
   - `onNovelasUpdated`: Callback para actualizar la lista de novelas después de cambiar el estado de favoritos.
 
-link al repositorio -> 
+link al repositorio -> https://github.com/cosmxr/GestionNovelasFinal_PE.git
