@@ -7,10 +7,9 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.gestionnovelasfinal.Screen.AddNovelScreen
 import com.example.gestionnovelasfinal.ui.theme.GestionNovelasFinal
 import com.google.firebase.FirebaseApp
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
 
 class MainActivity : ComponentActivity() {
     private val firestoreRepository = FirestoreRepository()
@@ -21,51 +20,56 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
 
         setContent {
-            // Usar un estado mutable para novelas
             var novelas by remember { mutableStateOf<List<Novela>>(emptyList()) }
+            var resenas by remember { mutableStateOf<List<Resenas>>(emptyList()) }
+            val coroutineScope = rememberCoroutineScope()
 
-            // Recuperar las novelas desde Firestore al iniciar
             LaunchedEffect(Unit) {
-                novelas = firestoreRepository.obtenerNovelas()
+                val todasNovelas = firestoreRepository.obtenerNovelas()
+                val novelasFavoritas = firestoreRepository.obtenerNovelasFavoritas()
+                novelas = todasNovelas.map { novela ->
+                    novela.copy(isFavorita = novelasFavoritas.any { it.id == novela.id })
+                }
             }
 
             GestionNovelasFinal {
-                Navigation(novelas, { updatedNovelas -> novelas = updatedNovelas }) // Manejar actualización de novelas
+                Navigation(novelas, resenas, { updatedResenas -> resenas = updatedResenas },
+                    { updatedNovelas -> novelas = updatedNovelas }, coroutineScope)
             }
         }
     }
 }
-
 @Composable
-fun Navigation(novelas: List<Novela>, onNovelasUpdated: (List<Novela>) -> Unit) {
+fun Navigation(
+    novelas: List<Novela>,
+    resenas: List<Resenas>,
+    onResenasUpdated: (List<Resenas>) -> Unit,
+    onNovelasUpdated: (List<Novela>) -> Unit,
+    coroutineScope: CoroutineScope
+
+) {
     val navController = rememberNavController()
+    val firestoreRepository = FirestoreRepository()
 
     NavHost(navController = navController, startDestination = Screen.NovelListScreen.route) {
         composable(Screen.NovelListScreen.route) {
-            NovelListScreen(navController, novelas, onNovelasUpdated) // Pasar el manejador de actualización
+            NovelListScreen(navController, novelas, onNovelasUpdated, firestoreRepository, coroutineScope)
         }
         composable(Screen.AddNovelScreen.route) {
             AddNovelScreen(navController) { nuevaNovela ->
-                // Agregar nueva novela a la lista
-                onNovelasUpdated(novelas + nuevaNovela) // Actualiza novelas usando el manejador
+                onNovelasUpdated(novelas + nuevaNovela)
                 navController.navigate(Screen.NovelListScreen.route)
             }
         }
         composable(Screen.AddReviewScreen.route) {
-            val novela = navController.previousBackStackEntry?.savedStateHandle?.get<Novela>("novela")
-            novela?.let {
                 AddReviewScreen(navController) { nuevaResena ->
-                    // Buscar la novela en la lista de novelas y agregarle la nueva reseña
-                    val novelaActualizada = novela.copy(resenas = (novela.resenas + nuevaResena) as List<Resenas>)
-
-                    // Actualizar la lista de novelas con la novela actualizada
-                    val nuevasNovelas = novelas.map { if (it.id == novelaActualizada.id) novelaActualizada else it }
-                    onNovelasUpdated(nuevasNovelas)
+                  onResenasUpdated(resenas + nuevaResena)
+                    navController.navigate(Screen.ReviewListScreen.route)
                 }
             }
-        }
         composable(Screen.ReviewListScreen.route) {
-            ReviewListScreen(navController, novelas)
+            ReviewListScreen(navController)
+
         }
         composable(Screen.FavoriteNovelsScreen.route) {
             FavoriteNovelsScreen(navController, novelas)

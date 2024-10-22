@@ -3,19 +3,21 @@ package com.example.gestionnovelasfinal
 import android.os.Parcel
 import android.os.Parcelable
 
-
 data class Resenas(
-    val nombre: String,
-    val contenido: String
+    val novelaId: String = "",
+    val nombre: String = "",
+    val contenido: String = ""
 ) : Parcelable {
-    constructor(parcel: String) : this(
+    constructor(parcel: Parcel) : this(
+        parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: ""
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(contenido)
+        parcel.writeString(novelaId)
         parcel.writeString(nombre)
+        parcel.writeString(contenido)
     }
 
     override fun describeContents(): Int {
@@ -24,15 +26,11 @@ data class Resenas(
 
     companion object CREATOR : Parcelable.Creator<Resenas> {
         override fun createFromParcel(parcel: Parcel): Resenas {
-            return Resenas(parcel.toString())
+            return Resenas(parcel)
         }
 
         override fun newArray(size: Int): Array<Resenas?> {
             return arrayOfNulls(size)
         }
     }
-}
-//para que pueda leer Strings de forma que lo acepten ya que parceable no deja
-private fun String.readString(): String? {
-    TODO("Not yet implemented")
 }

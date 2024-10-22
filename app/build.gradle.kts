@@ -46,6 +46,9 @@ android {
 }
 
 dependencies {
+
+
+
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.1")
@@ -84,6 +87,9 @@ dependencies {
     implementation ("com.google.firebase:firebase-firestore-ktx")
 
         implementation ("com.google.firebase:firebase-firestore-ktx:24.7.1")
+    // Firebase Authentication
+    implementation ("com.google.firebase:firebase-auth-ktx:22.0.0")
+
 
 
 }
