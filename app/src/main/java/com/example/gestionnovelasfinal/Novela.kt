@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.RequiresApi
+import com.google.firebase.firestore.PropertyName
 
 data class Novela(
     val id: String = "", // Este campo será llenado automáticamente por Firestore.
@@ -13,7 +14,8 @@ data class Novela(
     val año_publicacion: Int = 0, // Valor por defecto
     val descripcion: String = "", // Valor por defecto
     val resenas: List<Resenas> = emptyList(), // Cambiado a List<Resenas>
-    val isFavorita: Boolean = false // Valor por defecto
+    @get:PropertyName("isFavorita") @set:PropertyName("isFavorita") var isFavorita: Boolean = false
+
 ) : Parcelable {
     @RequiresApi(Build.VERSION_CODES.Q)
     constructor(parcel: Parcel) : this(

@@ -50,13 +50,23 @@ class FirestoreRepository {
     }
 
     suspend fun agregarResena(novelaId: String, nombreNovela: String,resena: Resenas) {
-        db.collection("resenas")
+        db.collection("Resenas")
             .add(resena.copy(novelaId = novelaId, nombre = nombreNovela))
             .await()
     }
-
+    suspend fun eliminarResena(resena: Resenas) {
+        db.collection("Resenas")
+            .whereEqualTo("novelaId", resena.novelaId)
+            .whereEqualTo("nombre", resena.nombre)
+            .whereEqualTo("contenido", resena.contenido)
+            .get()
+            .await()
+            .documents.forEach { document ->
+                db.collection("Resenas").document(document.id).delete().await()
+            }
+    }
     suspend fun obtenerResenas(): List<Resenas> {
-        return db.collection("resenas")
+        return db.collection("Resenas")
             .get()
             .await()
             .documents.map { document ->

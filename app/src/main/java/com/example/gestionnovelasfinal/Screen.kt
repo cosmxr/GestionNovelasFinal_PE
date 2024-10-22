@@ -180,25 +180,52 @@ fun ReviewListScreen(navController: NavHostController) {
     Column {
         LazyColumn {
             items(resenasList) { resena ->
-                Card(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(resena.nombre, style = MaterialTheme.typography.headlineSmall)
-                        Text(text = "Reseña: ${resena.contenido}", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = "Reseña: ${resena.contenido}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Row {
+                            Button(onClick = {
+                                coroutineScope.launch {
+                                    try {
+                                        firestoreRepository.eliminarResena(resena)
+                                        resenasList.remove(resena)
+                                    } catch (e: Exception) {
+                                        println("Error al eliminar reseña: ${e.message}")
+                                    }
+                                }
+                            }) {
+                                Text("Eliminar")
+                            }
+                        }
                     }
                 }
+
+
             }
         }
-        Button(onClick = { navController.navigate(Screen.NovelListScreen.route) { popUpTo(Screen.NovelListScreen.route) { inclusive = true } } },
+        Button(
+            onClick = {
+                navController.navigate(Screen.NovelListScreen.route) {
+                    popUpTo(
+                        Screen.NovelListScreen.route
+                    ) { inclusive = true }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)) {
+                .padding(16.dp)
+        ) {
             Text("Volver")
         }
-    }
-}
-
+    }}
 @Composable
 fun FavoriteNovelsScreen(
     navController: NavHostController,
