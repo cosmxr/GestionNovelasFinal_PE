@@ -24,7 +24,12 @@ class FirestoreRepository {
                 document.toObject(Novela::class.java)!!.copy(id = document.id)
             }
     }
-
+    suspend fun actualizarNovela(novela: Novela) {
+        db.collection("novelasClasicas")
+            .document(novela.id)
+            .set(novela)
+            .await()
+    }
     suspend fun obtenerNovelasFavoritas(): List<Novela> {
         return db.collection("novelasClasicas")
             .whereEqualTo("isFavorita", true)
@@ -35,12 +40,7 @@ class FirestoreRepository {
             }
     }
 
-    suspend fun actualizarNovela(novela: Novela) {
-        db.collection("novelasClasicas")
-            .document(novela.id)
-            .set(novela)
-            .await()
-    }
+
 
     suspend fun agregarNovelasFavoritas(novelaId: String, isFavorita: Boolean) {
         db.collection("novelasClasicas")

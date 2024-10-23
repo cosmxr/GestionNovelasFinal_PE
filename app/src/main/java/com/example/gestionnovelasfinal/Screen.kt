@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import kotlin.text.toIntOrNull
 
 sealed class Screen(val route: String) {
+    object LoginScreen : Screen("login")
+    object RegisterScreen : Screen("register")
     object NovelListScreen : Screen("novel_list")
     object AddNovelScreen : Screen("add_novel")
     object AddReviewScreen : Screen("add_review")
