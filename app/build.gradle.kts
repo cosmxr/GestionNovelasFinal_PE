@@ -8,12 +8,12 @@ plugins {
 android {
 
     namespace = "com.example.gestionnovelasfinal"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.gestionnovelasfinal"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -90,6 +90,10 @@ dependencies {
     // Firebase Authentication
     implementation ("com.google.firebase:firebase-auth-ktx:22.0.0")
 
+    //dependencias de autenticacion
+
+    implementation("androidx.credentials:credentials:1.5.0-alpha05")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-alpha05")
 
 
 }

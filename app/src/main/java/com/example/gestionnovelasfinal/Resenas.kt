@@ -6,9 +6,11 @@ import android.os.Parcelable
 data class Resenas(
     val novelaId: String = "",
     val nombre: String = "",
-    val contenido: String = ""
+    val contenido: String = "",
+    val userId: String = ""
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
+        parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: ""
@@ -18,6 +20,7 @@ data class Resenas(
         parcel.writeString(novelaId)
         parcel.writeString(nombre)
         parcel.writeString(contenido)
+        parcel.writeString(userId)
     }
 
     override fun describeContents(): Int {

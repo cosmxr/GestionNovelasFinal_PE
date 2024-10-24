@@ -1,7 +1,7 @@
 package com.example.gestionnovelasfinal
 
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
@@ -24,13 +24,15 @@ class FirestoreRepository {
                 document.toObject(Novela::class.java)!!.copy(id = document.id)
             }
     }
+
     suspend fun actualizarNovela(novela: Novela) {
         db.collection("novelasClasicas")
             .document(novela.id)
             .set(novela)
             .await()
     }
-    suspend fun obtenerNovelasFavoritas(): List<Novela> {
+
+   /* suspend fun obtenerNovelasFavoritas(): List<Novela> {
         return db.collection("novelasClasicas")
             .whereEqualTo("isFavorita", true)
             .get()
@@ -40,20 +42,20 @@ class FirestoreRepository {
             }
     }
 
-
-
     suspend fun agregarNovelasFavoritas(novelaId: String, isFavorita: Boolean) {
         db.collection("novelasClasicas")
             .document(novelaId)
             .update("isFavorita", isFavorita)
             .await()
-    }
+    }*/
 
-    suspend fun agregarResena(novelaId: String, nombreNovela: String,resena: Resenas) {
+    suspend fun agregarResena(novelaId: String, nombreNovela: String, resena: Resenas) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         db.collection("Resenas")
             .add(resena.copy(novelaId = novelaId, nombre = nombreNovela))
             .await()
     }
+
     suspend fun eliminarResena(resena: Resenas) {
         db.collection("Resenas")
             .whereEqualTo("novelaId", resena.novelaId)
@@ -65,6 +67,7 @@ class FirestoreRepository {
                 db.collection("Resenas").document(document.id).delete().await()
             }
     }
+
     suspend fun obtenerResenas(): List<Resenas> {
         return db.collection("Resenas")
             .get()
@@ -72,4 +75,9 @@ class FirestoreRepository {
             .documents.map { document ->
                 document.toObject(Resenas::class.java)!!
             }
-    }}
+    }
+    fun getUserId(): String? {
+        val auth = FirebaseAuth.getInstance()
+        return auth.currentUser?.uid
+    }
+}

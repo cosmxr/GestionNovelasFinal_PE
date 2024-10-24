@@ -1,20 +1,23 @@
 package com.example.gestionnovelasfinal
 
 import android.os.Bundle
+import com.example.gestionnovelasfinal.SharedPreferences.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.gestionnovelasfinal.ui.theme.GestionNovelasFinal
+import com.example.gestionnovelasfinal.ui.theme.GestionNovelasFinalTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
-
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,21 +29,36 @@ class MainActivity : ComponentActivity() {
             var resenas by remember { mutableStateOf<List<Resenas>>(emptyList()) }
             val coroutineScope = rememberCoroutineScope()
             val firestoreRepository = FirestoreRepository()
+            var isDarkTheme by remember { mutableStateOf(false) }
 
             LaunchedEffect(auth.currentUser) {
                 if (auth.currentUser != null) {
                     val todasNovelas = firestoreRepository.obtenerNovelas()
                     novelas = todasNovelas
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        val novelasFavoritas = sharedPreferences.getUserFavoriteNovels(userId)
+                        novelas = todasNovelas.map { novela ->
+                            novela.copy(isFavorita = novelasFavoritas.contains(novela.id))
+                        }
+                        isDarkTheme = SharedPreferences().getUserThemePreference(userId)
+                    }
                 }
             }
-
-            GestionNovelasFinal {
-                Navigation(novelas, resenas, { updatedResenas -> resenas = updatedResenas },
-                    { updatedNovelas -> novelas = updatedNovelas }, coroutineScope, auth)
+            GestionNovelasFinalTheme(darkTheme = isDarkTheme) {
+                Navigation(
+                    novelas, resenas, { updatedResenas -> resenas = updatedResenas },
+                    { updatedNovelas -> novelas = updatedNovelas }, coroutineScope, auth,
+                    isDarkTheme, { isDarkTheme = !isDarkTheme
+                    auth.currentUser?.let {user -> coroutineScope.launch { sharedPreferences
+                        .saveUserThemePreference(user.uid, isDarkTheme) }
+                         } }
+                )
             }
         }
     }
 }
+
 @Composable
 fun Navigation(
     novelas: List<Novela>,
@@ -48,9 +66,13 @@ fun Navigation(
     onResenasUpdated: (List<Resenas>) -> Unit,
     onNovelasUpdated: (List<Novela>) -> Unit,
     coroutineScope: CoroutineScope,
-    auth: FirebaseAuth
+    auth: FirebaseAuth,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
 ) {
     val navController = rememberNavController()
+    val sharedPreferences = SharedPreferences()
+    val userId = auth.currentUser?.uid
 
     NavHost(navController = navController, startDestination = Screen.LoginScreen.route) {
         composable(Screen.LoginScreen.route) {
@@ -60,7 +82,10 @@ fun Navigation(
             RegisterScreen(navController, auth)
         }
         composable(Screen.NovelListScreen.route) {
-            NovelListScreen(navController, novelas, onNovelasUpdated, FirestoreRepository(), coroutineScope)
+            NovelListScreen(
+                navController, novelas, onNovelasUpdated,
+                FirestoreRepository(), isDarkTheme,coroutineScope,
+                onToggleTheme,sharedPreferences,userId)
         }
         composable(Screen.AddNovelScreen.route) {
             AddNovelScreen(navController) { nuevaNovela ->
@@ -78,7 +103,11 @@ fun Navigation(
             ReviewListScreen(navController)
         }
         composable(Screen.FavoriteNovelsScreen.route) {
-            FavoriteNovelsScreen(navController, novelas)
+            FavoriteNovelsScreen(navController, novelas, onNovelasUpdated,
+                FirestoreRepository(), isDarkTheme,coroutineScope, onToggleTheme)
+        }
+        composable(Screen.SettingsScreen.route) {
+            SettingsScreen(isDarkTheme,onToggleTheme,navController)
         }
     }
 }
