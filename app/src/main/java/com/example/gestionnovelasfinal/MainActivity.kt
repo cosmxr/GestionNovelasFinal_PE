@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
         FirebaseApp.initializeApp(this)
+        sharedPreferences = SharedPreferences()
 
         setContent {
             var novelas by remember { mutableStateOf<List<Novela>>(emptyList()) }
@@ -72,7 +73,7 @@ fun Navigation(
 ) {
     val navController = rememberNavController()
     val sharedPreferences = SharedPreferences()
-    val userId = auth.currentUser?.uid
+    val userId = auth.currentUser?.uid ?: ""
 
     NavHost(navController = navController, startDestination = Screen.LoginScreen.route) {
         composable(Screen.LoginScreen.route) {
@@ -84,8 +85,9 @@ fun Navigation(
         composable(Screen.NovelListScreen.route) {
             NovelListScreen(
                 navController, novelas, onNovelasUpdated,
-                FirestoreRepository(), isDarkTheme,coroutineScope,
-                onToggleTheme,sharedPreferences,userId)
+                FirestoreRepository(), isDarkTheme, coroutineScope,
+                onToggleTheme, sharedPreferences, userId
+            )
         }
         composable(Screen.AddNovelScreen.route) {
             AddNovelScreen(navController) { nuevaNovela ->
@@ -104,10 +106,10 @@ fun Navigation(
         }
         composable(Screen.FavoriteNovelsScreen.route) {
             FavoriteNovelsScreen(navController, novelas, onNovelasUpdated,
-                FirestoreRepository(), isDarkTheme,coroutineScope, onToggleTheme)
+                 isDarkTheme, coroutineScope, onToggleTheme,sharedPreferences,userId)
         }
         composable(Screen.SettingsScreen.route) {
-            SettingsScreen(isDarkTheme,onToggleTheme,navController)
+            SettingsScreen(isDarkTheme, onToggleTheme, navController)
         }
     }
 }

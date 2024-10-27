@@ -41,7 +41,7 @@ fun NovelListScreen(
     coroutineScope: CoroutineScope,
     onToggleTheme: () -> Unit,
     sharedPreferences: SharedPreferences,
-    userId: String?
+    userId: String
 ) { Column (modifier = Modifier
     .fillMaxSize()
     .background(MaterialTheme.colorScheme.background)){
@@ -85,7 +85,8 @@ fun NovelListScreen(
                 TarjetaNovela(
                     novela,
                     onAddReviewClick = { onAddReviewClick(novela, navController) },
-                    onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated, firestoreRepository, coroutineScope) }
+                    onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated,
+                        coroutineScope,sharedPreferences,userId) }
                 )
             }
         }
@@ -99,27 +100,7 @@ private fun onAddReviewClick(novela: Novela, navController: NavController) {
     navController.navigate(Screen.AddReviewScreen.route)
 }
 
-fun toggleFavorite(
-    novela: Novela,
-    novelas: List<Novela>,
-    onNovelasUpdated: (List<Novela>) -> Unit,
-    firestoreRepository: FirestoreRepository,
-    coroutineScope: CoroutineScope,
-    sharedPreferences: SharedPreferences,
-    userId: String
-) {
-    val nuevaLista = novelas.map {
-        if (it.id == novela.id) it.copy(isFavorita = !it.isFavorita) else it
-    }
-    onNovelasUpdated(nuevaLista)
 
-    val favoriteNovels = nuevaLista.filter { it.isFavorita }.map { it.id }
-    sharedPreferences.saveUserFavoriteNovels(userId, favoriteNovels)
-
-    coroutineScope.launch {
-        firestoreRepository.agregarNovelasFavoritas(novela.id, !novela.isFavorita)
-    }
-}
 
 @Composable
 fun AddNovelScreen(navController: NavController, onNovelAdded: (Novela) -> Unit) {
@@ -131,6 +112,7 @@ fun AddNovelScreen(navController: NavController, onNovelAdded: (Novela) -> Unit)
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)){
     Column(modifier = Modifier.padding(16.dp)) {
+        Spacer(modifier =Modifier.paddingFromBaseline(top = 100.dp))
         OutlinedTextField(value = titulo, onValueChange = { titulo = it },
             label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = autor, onValueChange = { autor = it },
@@ -141,7 +123,7 @@ fun AddNovelScreen(navController: NavController, onNovelAdded: (Novela) -> Unit)
             label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
-            val nuevaNovela = Novela(nombre = titulo, autor = autor, año_publicacion = ano.toIntOrNull() ?: 0, descripcion = descripcion)
+            val nuevaNovela = Novela(nombre = titulo, autor = autor, ano_publicacion = ano.toIntOrNull() ?: 0, descripcion = descripcion)
             agregarNovelaAFirestore(nuevaNovela) { novelaConId ->
                 onNovelAdded(novelaConId)
                 navController.navigate(Screen.NovelListScreen.route)
@@ -307,32 +289,57 @@ fun ReviewListScreen(navController: NavHostController) {
             Text("Volver")
         }
     }}}
+
+fun toggleFavorite(
+    novela: Novela,
+    novelas: List<Novela>,
+    onNovelasUpdated: (List<Novela>) -> Unit,
+    coroutineScope: CoroutineScope,
+    sharedPreferences: SharedPreferences,
+    userId: String
+) {
+    val nuevaLista = novelas.map {
+        if (it.id == novela.id) it.copy(isFavorita = !it.isFavorita) else it
+    }
+    onNovelasUpdated(nuevaLista)
+
+    coroutineScope.launch {
+        val favoriteNovels = nuevaLista.filter { it.isFavorita }.map { it.id }
+        sharedPreferences.saveUserFavoriteNovels(userId, favoriteNovels)}
+
+}
+
 @Composable
 fun FavoriteNovelsScreen(
     navController: NavController,
     novelas: List<Novela>,
     onNovelasUpdated: (List<Novela>) -> Unit,
-    firestoreRepository: FirestoreRepository,
     isDarkTheme: Boolean,
     coroutineScope: CoroutineScope,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    sharedPreferences: SharedPreferences,
+    userId: String
 ) {
-    val favoriteNovels = novelas.filter { it.isFavorita }
-    Column (modifier = Modifier
+    val favoriteNovels = remember { mutableStateListOf<Novela>() }
+    LaunchedEffect(userId) {
+        coroutineScope.launch {
+            val favoriteNovelsIds = sharedPreferences.getUserFavoriteNovels(userId)
+            val userFavoriteNovels = novelas.filter { it.id in favoriteNovelsIds }
+            favoriteNovels.clear()
+            favoriteNovels.addAll(userFavoriteNovels)
+        }
+    }
+    Column(modifier = Modifier
         .fillMaxSize()
-        .background(MaterialTheme.colorScheme.background)){
+        .background(MaterialTheme.colorScheme.background)) {
         Text(text = "Novelas Favoritas", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(46.dp))
-        Column (modifier = Modifier
-            .fillMaxSize()
-        ){
         LazyColumn {
-
             items(favoriteNovels) { novela ->
                 TarjetaNovela(
                     novela,
                     onAddReviewClick = { onAddReviewClick(novela, navController) },
-                    onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated, firestoreRepository, coroutineScope) }
+                    onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated, coroutineScope, sharedPreferences, userId) }
                 )
             }
         }
@@ -341,13 +348,13 @@ fun FavoriteNovelsScreen(
             navController.navigate(Screen.NovelListScreen.route) {
                 popUpTo(Screen.NovelListScreen.route) { inclusive = true }
             }
-        },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)) {
+        }, modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)) {
             Text("Volver")
         }
-}}}
+    }
+}
 @Composable
 fun SettingsScreen(
     isDarkTheme: Boolean,
@@ -405,7 +412,7 @@ fun TarjetaNovela(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(novela.nombre, style = MaterialTheme.typography.headlineSmall)
-            Text("Por ${novela.autor}, ${novela.año_publicacion}")
+            Text("Por ${novela.autor}, ${novela.ano_publicacion}")
             Text(novela.descripcion, style = MaterialTheme.typography.bodyMedium)
 
             Spacer(modifier = Modifier.height(8.dp))
