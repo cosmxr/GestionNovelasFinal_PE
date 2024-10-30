@@ -11,7 +11,7 @@ data class Novela(
     val id: String = "", // Este campo será llenado automáticamente por Firestore.
     val nombre: String = "", // Valor por defecto
     val autor: String = "", // Valor por defecto
-    val ano_publicacion: Int = 0, // Valor por defecto
+    val año_publicacion: Int = 0, // Valor por defecto
     val descripcion: String = "", // Valor por defecto
     val resenas: List<Resenas> = emptyList(), // Cambiado a List<Resenas>
     @get:PropertyName("isFavorita") @set:PropertyName("isFavorita") var isFavorita: Boolean = false
@@ -35,7 +35,7 @@ data class Novela(
         parcel.writeString(id)
         parcel.writeString(nombre)
         parcel.writeString(autor)
-        parcel.writeInt(ano_publicacion)
+        parcel.writeInt(año_publicacion)
         parcel.writeString(descripcion)
         parcel.writeTypedList(resenas) // Asegúrate de escribir la lista correctamente
         parcel.writeBoolean(isFavorita) // Escribir isFavorita
