@@ -123,7 +123,7 @@ fun AddNovelScreen(navController: NavController, onNovelAdded: (Novela) -> Unit)
             label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
-            val nuevaNovela = Novela(nombre = titulo, autor = autor, ano_publicacion = ano.toIntOrNull() ?: 0, descripcion = descripcion)
+            val nuevaNovela = Novela(nombre = titulo, autor = autor, año_publicacion = ano.toIntOrNull() ?: 0, descripcion = descripcion)
             agregarNovelaAFirestore(nuevaNovela) { novelaConId ->
                 onNovelAdded(novelaConId)
                 navController.navigate(Screen.NovelListScreen.route)
