@@ -412,7 +412,7 @@ fun TarjetaNovela(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(novela.nombre, style = MaterialTheme.typography.headlineSmall)
-            Text("Por ${novela.autor}, ${novela.ano_publicacion}")
+            Text("Por ${novela.autor}, ${novela.año_publicacion}")
             Text(novela.descripcion, style = MaterialTheme.typography.bodyMedium)
 
             Spacer(modifier = Modifier.height(8.dp))
