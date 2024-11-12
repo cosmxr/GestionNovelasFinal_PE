@@ -32,22 +32,22 @@ class FirestoreRepository {
             .await()
     }
 
-   /* suspend fun obtenerNovelasFavoritas(): List<Novela> {
-        return db.collection("novelasClasicas")
-            .whereEqualTo("isFavorita", true)
-            .get()
-            .await()
-            .documents.map { document ->
-                document.toObject(Novela::class.java)!!.copy(id = document.id)
-            }
-    }
+    /* suspend fun obtenerNovelasFavoritas(): List<Novela> {
+         return db.collection("novelasClasicas")
+             .whereEqualTo("isFavorita", true)
+             .get()
+             .await()
+             .documents.map { document ->
+                 document.toObject(Novela::class.java)!!.copy(id = document.id)
+             }
+     }
 
-    suspend fun agregarNovelasFavoritas(novelaId: String, isFavorita: Boolean) {
-        db.collection("novelasClasicas")
-            .document(novelaId)
-            .update("isFavorita", isFavorita)
-            .await()
-    }*/
+     suspend fun agregarNovelasFavoritas(novelaId: String, isFavorita: Boolean) {
+         db.collection("novelasClasicas")
+             .document(novelaId)
+             .update("isFavorita", isFavorita)
+             .await()
+     }*/
 
     suspend fun agregarResena(novelaId: String, nombreNovela: String, resena: Resenas) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""

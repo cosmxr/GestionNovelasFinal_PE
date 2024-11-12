@@ -35,6 +35,7 @@ sealed class Screen(val route: String) {
 fun NovelListScreen(
     navController: NavController,
     novelas: List<Novela>,
+    favoriteNovels: List<String>,
     onNovelasUpdated: (List<Novela>) -> Unit,
     firestoreRepository: FirestoreRepository,
     isDarkTheme: Boolean,
@@ -42,58 +43,60 @@ fun NovelListScreen(
     onToggleTheme: () -> Unit,
     sharedPreferences: SharedPreferences,
     userId: String
-) { Column (modifier = Modifier
-    .fillMaxSize()
-    .background(MaterialTheme.colorScheme.background)){
-    Column(modifier = Modifier.padding(16.dp)
-    ) {
-        Text(text = "Listado de Novelas", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.End
-        ) {IconButton(onClick = {navController.navigate(Screen.SettingsScreen.route)}) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Toggle Theme"
-            )
-        }}
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.background)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Listado de Novelas", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = { navController.navigate(Screen.SettingsScreen.route) }) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Toggle Theme"
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(onClick = { navController.navigate(Screen.AddNovelScreen.route) }) {
+                    Text("Agregar Novela")
+                }
+                Spacer(modifier = Modifier.width(2.dp))
+                Button(onClick = { navController.navigate(Screen.ReviewListScreen.route) }) {
+                    Text("Ver Reseñas")
+                }
+                Spacer(modifier = Modifier.width(2.dp))
+                Button(onClick = { navController.navigate(Screen.FavoriteNovelsScreen.route) }) {
+                    Text("Favoritos")
+                }
+            }
 
-            Button(onClick = { navController.navigate(Screen.AddNovelScreen.route) }) {
-                Text("Agregar Novela")
-            }
-            Spacer(modifier = Modifier.width(2.dp))
-            Button(onClick = { navController.navigate(Screen.ReviewListScreen.route) }) {
-                Text("Ver Reseñas")
-            }
-            Spacer(modifier = Modifier.width(2.dp))
-            Button(onClick = { navController.navigate(Screen.FavoriteNovelsScreen.route) }) {
-                Text("Favoritos")
+            LazyColumn {
+                items(novelas) { novela ->
+                    TarjetaNovela(
+                        novela,
+                        favoriteNovels,
+                        onAddReviewClick = { onAddReviewClick(novela, navController) },
+                        onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated,
+                            coroutineScope, sharedPreferences, userId) }
+                    )
+                }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        LazyColumn {
-            items(novelas) { novela ->
-                TarjetaNovela(
-                    novela,
-                    onAddReviewClick = { onAddReviewClick(novela, navController) },
-                    onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated,
-                        coroutineScope,sharedPreferences,userId) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
-}}
+}
 
 private fun onAddReviewClick(novela: Novela, navController: NavController) {
     navController.currentBackStackEntry?.savedStateHandle?.set("novela", novela)
@@ -111,42 +114,42 @@ fun AddNovelScreen(navController: NavController, onNovelAdded: (Novela) -> Unit)
     Column (modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)){
-    Column(modifier = Modifier.padding(16.dp)) {
-        Spacer(modifier =Modifier.paddingFromBaseline(top = 100.dp))
-        OutlinedTextField(value = titulo, onValueChange = { titulo = it },
-            label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = autor, onValueChange = { autor = it },
-            label = { Text("Autor") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = ano, onValueChange = { ano = it },
-            label = { Text("Año") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = descripcion, onValueChange = { descripcion = it },
-            label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth())
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val nuevaNovela = Novela(nombre = titulo, autor = autor, año_publicacion = ano.toIntOrNull() ?: 0, descripcion = descripcion)
-            agregarNovelaAFirestore(nuevaNovela) { novelaConId ->
-                onNovelAdded(novelaConId)
-                navController.navigate(Screen.NovelListScreen.route)
-            }
-        }) {
-            Text("Guardar novela")
-        }
-        Button(
-            onClick = {
-                navController.navigate(Screen.NovelListScreen.route) {
-                    popUpTo(
-                        Screen.NovelListScreen.route
-                    ) { inclusive = true }
+        Column(modifier = Modifier.padding(16.dp)) {
+            Spacer(modifier =Modifier.paddingFromBaseline(top = 100.dp))
+            OutlinedTextField(value = titulo, onValueChange = { titulo = it },
+                label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = autor, onValueChange = { autor = it },
+                label = { Text("Autor") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = ano, onValueChange = { ano = it },
+                label = { Text("Año") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = descripcion, onValueChange = { descripcion = it },
+                label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                val nuevaNovela = Novela(nombre = titulo, autor = autor, año_publicacion = ano.toIntOrNull() ?: 0, descripcion = descripcion)
+                agregarNovelaAFirestore(nuevaNovela) { novelaConId ->
+                    onNovelAdded(novelaConId)
+                    navController.navigate(Screen.NovelListScreen.route)
                 }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text("Volver")
+            }) {
+                Text("Guardar novela")
+            }
+            Button(
+                onClick = {
+                    navController.navigate(Screen.NovelListScreen.route) {
+                        popUpTo(
+                            Screen.NovelListScreen.route
+                        ) { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Volver")
+            }
         }
-    }
-}}
+    }}
 
 @Composable
 fun AddReviewScreen(navController: NavController, onResenasAdded: (Resenas) -> Unit) {
@@ -157,50 +160,50 @@ fun AddReviewScreen(navController: NavController, onResenasAdded: (Resenas) -> U
     Column (modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)){
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)
-        .paddingFromBaseline(top = 200.dp)) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .paddingFromBaseline(top = 200.dp)) {
 
-        OutlinedTextField(
-            value = textoResena,
-            onValueChange = {
-                if (it.length <= 200) {
-                    textoResena = it
-                }
-            },
-            label = { Text("Escribe tu reseña (máx. 200 caracteres)") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = textoResena,
+                onValueChange = {
+                    if (it.length <= 200) {
+                        textoResena = it
+                    }
+                },
+                label = { Text("Escribe tu reseña (máx. 200 caracteres)") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Button(onClick = {
-            if (novela != null) {
-                val nuevaResena = Resenas(novela.id,novela.nombre, contenido = textoResena)
-                onResenasAdded(nuevaResena)
-                coroutineScope.launch {
-                    firestoreRepository.agregarResena(novela.id, novela.nombre,nuevaResena)
+            Button(onClick = {
+                if (novela != null) {
+                    val nuevaResena = Resenas(novela.id,novela.nombre, contenido = textoResena)
+                    onResenasAdded(nuevaResena)
+                    coroutineScope.launch {
+                        firestoreRepository.agregarResena(novela.id, novela.nombre,nuevaResena)
+                    }
+                    navController.navigate(Screen.NovelListScreen.route)
                 }
-                navController.navigate(Screen.NovelListScreen.route)
+            }) {
+                Text("Añadir reseña")
             }
-        }) {
-            Text("Añadir reseña")
+            Button(
+                onClick = {
+                    navController.navigate(Screen.NovelListScreen.route) {
+                        popUpTo(
+                            Screen.NovelListScreen.route
+                        ) { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Volver")
+            }
         }
-        Button(
-            onClick = {
-                navController.navigate(Screen.NovelListScreen.route) {
-                    popUpTo(
-                        Screen.NovelListScreen.route
-                    ) { inclusive = true }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text("Volver")
-        }
-    }
-}}
+    }}
 
 private fun agregarNovelaAFirestore(novela: Novela, onComplete: (Novela) -> Unit) {
     val db = FirebaseFirestore.getInstance()
@@ -224,71 +227,71 @@ fun ReviewListScreen(navController: NavHostController) {
     Column (modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)){
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            try {
-                val resenasFirestore = firestoreRepository.obtenerResenas()
-                resenasList.clear()
-                resenasList.addAll(resenasFirestore)
-            } catch (e: Exception) {
-                println("Error al obtener reseñas: ${e.message}")
+        LaunchedEffect(Unit) {
+            coroutineScope.launch {
+                try {
+                    val resenasFirestore = firestoreRepository.obtenerResenas()
+                    resenasList.clear()
+                    resenasList.addAll(resenasFirestore)
+                } catch (e: Exception) {
+                    println("Error al obtener reseñas: ${e.message}")
+                }
             }
         }
-    }
 
-    Column (modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)
-        .paddingFromBaseline(top = 130.dp)) {
+        Column (modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .paddingFromBaseline(top = 130.dp)) {
 
-        LazyColumn {
-            items(resenasList) { resena ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text(resena.nombre, style = MaterialTheme.typography.headlineSmall)
-                        Text(
-                            text = "Reseña: ${resena.contenido}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Row {
-                            Button(onClick = {
-                                coroutineScope.launch {
-                                    try {
-                                        firestoreRepository.eliminarResena(resena)
-                                        resenasList.remove(resena)
-                                    } catch (e: Exception) {
-                                        println("Error al eliminar reseña: ${e.message}")
+            LazyColumn {
+                items(resenasList) { resena ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(resena.nombre, style = MaterialTheme.typography.headlineSmall)
+                            Text(
+                                text = "Reseña: ${resena.contenido}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Row {
+                                Button(onClick = {
+                                    coroutineScope.launch {
+                                        try {
+                                            firestoreRepository.eliminarResena(resena)
+                                            resenasList.remove(resena)
+                                        } catch (e: Exception) {
+                                            println("Error al eliminar reseña: ${e.message}")
+                                        }
                                     }
+                                }) {
+                                    Text("Eliminar")
                                 }
-                            }) {
-                                Text("Eliminar")
                             }
                         }
                     }
+
+
                 }
-
-
             }
-        }
-        Button(
-            onClick = {
-                navController.navigate(Screen.NovelListScreen.route) {
-                    popUpTo(
-                        Screen.NovelListScreen.route
-                    ) { inclusive = true }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text("Volver")
-        }
-    }}}
+            Button(
+                onClick = {
+                    navController.navigate(Screen.NovelListScreen.route) {
+                        popUpTo(
+                            Screen.NovelListScreen.route
+                        ) { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Volver")
+            }
+        }}}
 
 fun toggleFavorite(
     novela: Novela,
@@ -298,16 +301,27 @@ fun toggleFavorite(
     sharedPreferences: SharedPreferences,
     userId: String
 ) {
-    val nuevaLista = novelas.map {
-        if (it.id == novela.id) it.copy(isFavorita = !it.isFavorita) else it
-    }
-    onNovelasUpdated(nuevaLista)
-
     coroutineScope.launch {
-        val favoriteNovels = nuevaLista.filter { it.isFavorita }.map { it.id }
-        sharedPreferences.saveUserFavoriteNovels(userId, favoriteNovels)}
+        // Copiamos la lista actual de novelas para hacer una versión modificada
+        val updatedNovelas = novelas.map {
+            // Cambiamos el estado de la novela que coincide
+            if (it.id == novela.id) it.copy(isFavorita = !novela.isFavorita) else it
+        }
 
+        // Llamamos a la función de callback con la lista actualizada
+        onNovelasUpdated(updatedNovelas)
+
+        // Guardamos la nueva lista de favoritos en las preferencias compartidas
+        val favoriteNovels = sharedPreferences.getUserFavoriteNovels(userId).toMutableList()
+        if (novela.isFavorita) {
+            favoriteNovels.remove(novela.id)
+        } else {
+            favoriteNovels.add(novela.id)
+        }
+        sharedPreferences.saveUserFavoriteNovels(userId, favoriteNovels)
+    }
 }
+
 
 @Composable
 fun FavoriteNovelsScreen(
@@ -338,6 +352,7 @@ fun FavoriteNovelsScreen(
             items(favoriteNovels) { novela ->
                 TarjetaNovela(
                     novela,
+                    favoriteNovels.map { it.id },
                     onAddReviewClick = { onAddReviewClick(novela, navController) },
                     onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated, coroutineScope, sharedPreferences, userId) }
                 )
@@ -364,46 +379,50 @@ fun SettingsScreen(
     Column (modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)){
-    Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(modifier = Modifier.padding(66.dp)) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 26.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = "Dark Theme")
-                    Switch(
-                        checked = isDarkTheme,
-                        onCheckedChange = { onToggleTheme() }
-                    )
-                }
+        Column(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(modifier = Modifier.padding(66.dp)) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 26.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = "Dark Theme")
+                        Switch(
+                            checked = isDarkTheme,
+                            onCheckedChange = { onToggleTheme() }
+                        )
+                    }
 
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ){
-                    Button(onClick = {
-                        navController.navigate(Screen.NovelListScreen.route) {
-                            popUpTo(Screen.NovelListScreen.route) { inclusive = true }
+                    Row (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ){
+                        Button(onClick = {
+                            navController.navigate(Screen.NovelListScreen.route) {
+                                popUpTo(Screen.NovelListScreen.route) { inclusive = true }
+                            }
+                        }) {
+                            Text("Volver")
                         }
-                    }) {
-                        Text("Volver")
                     }
                 }
             }
         }
-    }
-}}
+    }}
 @Composable
 fun TarjetaNovela(
     novela: Novela,
+    favoriteNovels: List<String>,
     onAddReviewClick: (Novela) -> Unit,
     onToggleFavoriteClick: (Novela) -> Unit
 ) {
+    // Variable mutable que guarda si la novela es favorita o no
+    var isFavorita by remember { mutableStateOf(favoriteNovels.contains(novela.id)) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -411,34 +430,30 @@ fun TarjetaNovela(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(novela.nombre, style = MaterialTheme.typography.headlineSmall)
-            Text("Por ${novela.autor}, ${novela.año_publicacion}")
-            Text(novela.descripcion, style = MaterialTheme.typography.bodyMedium)
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = novela.nombre, style = MaterialTheme.typography.headlineSmall)
+            Text(text = novela.descripcion, style = MaterialTheme.typography.bodyMedium)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Botón para añadir reseña
                 Button(onClick = { onAddReviewClick(novela) }) {
-                    Text("Añadir reseña")
+                    Text("Añadir Reseña")
                 }
 
-                IconButton(onClick = { onToggleFavoriteClick(novela) }) {
-                    if (novela.isFavorita) {
-                        Icon(
-                            imageVector = Icons.Filled.Favorite,
-                            contentDescription = "Desmarcar como favorita",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Marcar como favorita",
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
+                // Icono de favorito que cambia su apariencia al hacer clic
+                IconButton(
+                    onClick = {
+                        // Cambiar el estado de favorito y actualizar la base de datos
+                        isFavorita = !isFavorita
+                        onToggleFavoriteClick(novela)
                     }
+                ) {
+                    Icon(
+                        imageVector = if (isFavorita) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (isFavorita) "Eliminar de favoritos" else "Agregar a favoritos"
+                    )
                 }
             }
         }

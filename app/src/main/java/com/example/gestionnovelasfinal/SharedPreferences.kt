@@ -37,4 +37,8 @@ class SharedPreferences {
             .await()
         return document.get("favoriteNovels") as? List<String> ?: emptyList()
     }
+
+
+
+
 }
