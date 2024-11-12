@@ -11,7 +11,9 @@ import com.example.gestionnovelasfinal.ui.theme.GestionNovelasFinalTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -103,4 +105,5 @@ fun Navigation(
             SettingsScreen(isDarkTheme, onToggleTheme, navController)
         }
     }
+
 }
