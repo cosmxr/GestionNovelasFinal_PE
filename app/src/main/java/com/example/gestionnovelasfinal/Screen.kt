@@ -1,24 +1,27 @@
 package com.example.gestionnovelasfinal
 
-import com.google.firebase.auth.FirebaseAuth
+import android.graphics.Bitmap
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.text.toIntOrNull
 
 sealed class Screen(val route: String) {
     object LoginScreen : Screen("login")
@@ -44,6 +47,15 @@ fun NovelListScreen(
     sharedPreferences: SharedPreferences,
     userId: String
 ) {
+    val resources = LocalContext.current.resources
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            BitmapUtils.recycleBitmap(bitmap)
+        }
+    }
+
     Column(modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)) {
@@ -420,8 +432,15 @@ fun TarjetaNovela(
     onAddReviewClick: (Novela) -> Unit,
     onToggleFavoriteClick: (Novela) -> Unit
 ) {
-    // Variable mutable que guarda si la novela es favorita o no
     var isFavorita by remember { mutableStateOf(favoriteNovels.contains(novela.id)) }
+    val resources = LocalContext.current.resources
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            BitmapUtils.recycleBitmap(bitmap)
+        }
+    }
 
     Card(
         modifier = Modifier
@@ -433,19 +452,20 @@ fun TarjetaNovela(
             Text(text = novela.nombre, style = MaterialTheme.typography.headlineSmall)
             Text(text = novela.descripcion, style = MaterialTheme.typography.bodyMedium)
 
+            bitmap?.let {
+                Image(bitmap = it.asImageBitmap(), contentDescription = null, modifier = Modifier.size(100.dp))
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Botón para añadir reseña
                 Button(onClick = { onAddReviewClick(novela) }) {
                     Text("Añadir Reseña")
                 }
 
-                // Icono de favorito que cambia su apariencia al hacer clic
                 IconButton(
                     onClick = {
-                        // Cambiar el estado de favorito y actualizar la base de datos
                         isFavorita = !isFavorita
                         onToggleFavoriteClick(novela)
                     }

@@ -94,6 +94,8 @@ dependencies {
 
     implementation("androidx.credentials:credentials:1.5.0-alpha05")
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0-alpha05")
+    implementation ("io.coil-kt:coil-compose:2.2.2")
+
 
 
 }
