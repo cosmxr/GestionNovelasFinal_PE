@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.osmdroid.util.GeoPoint
 
 sealed class Screen(val route: String) {
     object LoginScreen : Screen("login")
@@ -32,6 +34,8 @@ sealed class Screen(val route: String) {
     object ReviewListScreen : Screen("review_list")
     object SettingsScreen : Screen("settings")
     object FavoriteNovelsScreen : Screen("favorite_novels")
+    object MapScreen : Screen("map_activity")
+    object AddUbicationScreen : Screen("add_ubication")
 }
 
 @Composable
@@ -74,6 +78,16 @@ fun NovelListScreen(
                         contentDescription = "Toggle Theme"
                     )
                 }
+                IconButton(onClick = {
+                    val novelasWithLocation = novelas.filter { it.latitude != null && it.longitude != null }
+                    navController.currentBackStackEntry?.savedStateHandle?.set("novelas", ArrayList(novelasWithLocation))
+                    navController.navigate(Screen.MapScreen.route)
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "Show Map"
+                    )
+                }
             }
             Row(
                 modifier = Modifier
@@ -100,7 +114,8 @@ fun NovelListScreen(
                         favoriteNovels,
                         onAddReviewClick = { onAddReviewClick(novela, navController) },
                         onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated,
-                            coroutineScope, sharedPreferences, userId) }
+                            coroutineScope, sharedPreferences, userId) },
+                        onAddUbicationClick = { onAddUbicationClick(novela, navController) }
                     )
                 }
             }
@@ -366,7 +381,8 @@ fun FavoriteNovelsScreen(
                     novela,
                     favoriteNovels.map { it.id },
                     onAddReviewClick = { onAddReviewClick(novela, navController) },
-                    onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated, coroutineScope, sharedPreferences, userId) }
+                    onToggleFavoriteClick = { toggleFavorite(novela, novelas, onNovelasUpdated, coroutineScope, sharedPreferences, userId) },
+                    onAddUbicationClick = { onAddUbicationClick(novela, navController) }
                 )
             }
         }
@@ -425,12 +441,89 @@ fun SettingsScreen(
             }
         }
     }}
+
+private fun onAddUbicationClick(novela: Novela, navController: NavController) {
+    navController.currentBackStackEntry?.savedStateHandle?.set("novela", novela)
+    navController.navigate(Screen.AddUbicationScreen.route)
+}
+
+@Composable
+fun AddUbicationScreen(navController: NavController, novela: Novela, onUbicationAdded: (Novela) -> Unit) {
+    var selectedCity by remember { mutableStateOf("") }
+    val cities = listOf("Zaragoza", "Madrid", "Barcelona", "Valencia", "Sevilla","Granada","Paris",
+        "London","New York","Tokyo","Sydney","Berlin","Rome","Buenos Aires")
+    val cityCoordinates = mapOf(
+        "Zaragoza" to GeoPoint(41.648823, -0.889085),
+        "Madrid" to GeoPoint(40.416775, -3.703790),
+        "Barcelona" to GeoPoint(41.385064, 2.173404),
+        "Valencia" to GeoPoint(39.469907, -0.376288),
+        "Sevilla" to GeoPoint(37.389092, -5.984459),
+        "Granada" to GeoPoint(37.177336, -3.598557),
+        "Paris" to GeoPoint(48.856614, 2.352222),
+        "London" to GeoPoint(51.507351, -0.127758),
+        "New York" to GeoPoint(40.712776, -74.005974),
+        "Tokyo" to GeoPoint(35.689487, 139.691711),
+        "Sydney" to GeoPoint(-33.868820, 151.209290),
+        "Berlin" to GeoPoint(52.520008, 13.404954)
+    )
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(vertical = 86.dp)
+        .padding(16.dp))
+        {
+        Text(text = "Selecciona una ciudad", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        cities.forEach { city ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                RadioButton(
+                    selected = selectedCity == city,
+                    onClick = { selectedCity = city }
+                )
+                Text(text = city, modifier = Modifier.padding(start = 5.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Button(onClick = {
+            val coordinates = cityCoordinates[selectedCity]
+            if (coordinates != null) {
+                val updatedNovela = novela.copy(latitude = coordinates.latitude, longitude = coordinates.longitude)
+                coroutineScope.launch {
+                    FirestoreRepository().actualizarNovela(updatedNovela)
+                    onUbicationAdded(updatedNovela)
+                    navController.navigate(Screen.NovelListScreen.route) {
+                        popUpTo(Screen.NovelListScreen.route) { inclusive = true }
+                    }
+                }
+            }
+        }) {
+            Text("Guardar Ubicación")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            navController.navigate(Screen.NovelListScreen.route) {
+                popUpTo(Screen.NovelListScreen.route) { inclusive = true }
+            }
+        }) {
+            Text("Volver")
+        }
+    }
+}
+
 @Composable
 fun TarjetaNovela(
     novela: Novela,
     favoriteNovels: List<String>,
     onAddReviewClick: (Novela) -> Unit,
-    onToggleFavoriteClick: (Novela) -> Unit
+    onToggleFavoriteClick: (Novela) -> Unit,
+    onAddUbicationClick: (Novela) -> Unit
+
 ) {
     var isFavorita by remember { mutableStateOf(favoriteNovels.contains(novela.id)) }
     val resources = LocalContext.current.resources
@@ -462,6 +555,9 @@ fun TarjetaNovela(
             ) {
                 Button(onClick = { onAddReviewClick(novela) }) {
                     Text("Añadir Reseña")
+                }
+                Button(onClick = { onAddUbicationClick(novela) }) {
+                    Text("Añadir Ubicación")
                 }
 
                 IconButton(
